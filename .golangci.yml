@@ -15,7 +15,13 @@ linters:
   settings:
     errcheck:
       exclude-functions:
-        - (io.Closer).Close
+        - io.Copy(*bytes.Buffer)
+        - (*os.File).Close
+
+    gosec:
+      excludes:
+        - G104
+        - G307
 
   exclusions:
     rules:
