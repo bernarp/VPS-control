@@ -1,0 +1,61 @@
+errors:
+  INTERNAL_ERROR:
+    status: 500
+    message: "Internal server error"
+
+  INVALID_REQUEST:
+    status: 400
+    message: "Invalid request format"
+
+  DATABASE_ERROR:
+    status: 500
+    message: "Database operation failed"
+
+  INVALID_CREDENTIALS:
+    status: 401
+    message: "Invalid username or password"
+
+  TOKEN_EXPIRED:
+    status: 401
+    message: "Session expired, please login again"
+
+  PERMISSION_DENIED:
+    status: 403
+    message: "Access denied to this resource"
+
+  RATE_LIMIT_EXCEEDED:
+    status: 429
+    message: "Too many requests. Please try again later"
+
+  PM2_PROCESS_NOT_FOUND:
+    status: 404
+    message: "Specified PM2 process not found"
+
+  ACTION_NOT_ALLOWED:
+    status: 403
+    message: "You do not have permission to manage this process"
+
+  PROCESS_ALREADY_RUNNING:
+    status: 409
+    message: "Process is already running"
+
+  PROCESS_ALREADY_STOPPED:
+    status: 409
+    message: "Process is already stopped"
+
+  MALICIOUS_INPUT_DETECTED:
+    status: 400
+    message: "Malicious input detected in request parameters"
+
+  # Fail2Ban Errors
+  FAIL2BAN_JAIL_NOT_FOUND:
+    status: 404
+    message: "Specified Fail2Ban jail not found"
+
+  FAIL2BAN_IP_NOT_BANNED:
+    status: 404
+    message: "Specified IP is not banned in this jail"
+
+  FAIL2BAN_EXECUTION_ERROR:
+    status: 500
+    message: "Fail2Ban client command execution failed"

@@ -1,0 +1,36 @@
+server:
+  port: ${PORT}
+  debug: true
+
+database:
+  host: ${DB_HOST}
+  port: ${DB_PORT}
+  user: ${DB_USER}
+  password: ${DB_PASSWORD}
+  name: ${DB_NAME}
+  ssl_mode: "disable"
+
+storage:
+  local_db_path: ${LOCAL_DB_PATH}
+
+nats:
+  url: ${NATS_URL}
+  timeout: "5s"
+
+jwt:
+  issuer: "VPS_API"
+  ttl: "30m"
+
+rate_limit:
+  auth:
+    max_attempts: 5
+    block_time: "30m"
+  api:
+    limit: 100
+    window: "1m"
+
+cookie:
+  name: "VPS_API"
+  secure: true
+  http_only: true
+  same_site: "strict"

@@ -1,0 +1,142 @@
+name: CI-CD. Test, Build & Deploy
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          cache: true
+
+      - name: Cache Swag binary
+        id: cache-swag
+        uses: actions/cache@v4
+        with:
+          path: ~/go/bin/swag
+          key: ${{ runner.os }}-swag-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-swag-
+
+      - name: Install swag
+        if: steps.cache-swag.outputs.cache-hit != 'true'
+        run: go install github.com/swaggo/swag/cmd/swag@latest
+
+      - name: Generate docs
+        run: ~/go/bin/swag init
+
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.8.0
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          cache: true
+
+      - name: Cache Swag binary
+        id: cache-swag
+        uses: actions/cache@v4
+        with:
+          path: ~/go/bin/swag
+          key: ${{ runner.os }}-swag-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-swag-
+
+      - name: Install swag
+        if: steps.cache-swag.outputs.cache-hit != 'true'
+        run: go install github.com/swaggo/swag/cmd/swag@latest
+
+      - name: Generate docs
+        run: ~/go/bin/swag init
+
+      - name: Run tests
+        run: go test -race -v ./...
+
+  build:
+    runs-on: ubuntu-latest
+    needs: [lint, test]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.25'
+          cache: true
+
+      - name: Cache Swag binary
+        id: cache-swag
+        uses: actions/cache@v4
+        with:
+          path: ~/go/bin/swag
+          key: ${{ runner.os }}-swag-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-swag-
+
+      - name: Install swag
+        if: steps.cache-swag.outputs.cache-hit != 'true'
+        run: go install github.com/swaggo/swag/cmd/swag@latest
+
+      - name: Generate docs
+        run: ~/go/bin/swag init
+
+      - name: Build Binary
+        run: env GOOS=linux GOARCH=amd64 go build -v -o vps-api-app .
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vps-api-binary
+          path: |
+            vps-api-app
+            config.yaml
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: build
+    if: success()
+    steps:
+      - name: Download Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: vps-api-binary
+
+      - name: Copy files to VPS (SCP)
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          source: "vps-api-app,config.yaml"
+          target: ${{ secrets.DEPLOY_PATH }}
+
+      - name: Restart Service via SSH
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          script: |
+            set -e
+            cd ${{ secrets.DEPLOY_PATH }}
+            chmod +x vps-api-app
+            sudo systemctl restart ${{ secrets.SERVICE_NAME }}
