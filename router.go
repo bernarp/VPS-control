@@ -5,18 +5,21 @@ import (
 	"DiscordBotControl/internal/middleware"
 	"time"
 
-	ginzap "github.com/gin-contrib/zap"
+	"github.com/gin-contrib/zap"
 	"github.com/gin-gonic/gin"
-	swaggerFiles "github.com/swaggo/files"
-	ginSwagger "github.com/swaggo/gin-swagger"
+	"github.com/swaggo/files"
+	"github.com/swaggo/gin-swagger"
 	"go.uber.org/zap"
 )
 
 func setupRouter(logger *zap.Logger) *gin.Engine {
+	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
+
 	r.Use(ginzap.Ginzap(logger.Named("http"), time.RFC3339, true))
 	r.Use(ginzap.RecoveryWithZap(logger, true))
 	r.Use(middleware.SecurityHeadersMiddleware())
+
 	return r
 }
 

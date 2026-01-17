@@ -28,19 +28,8 @@ func main() {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 	logger := InitLogger(cfg.Server.Debug)
-	defer func() { _ = logger.Sync() }()
-
 	app := initApp(cfg, logger)
-	defer app.Close()
-
-	r := setupRouter(logger)
-	app.registerRoutes(r)
-	logger.Info(
-		"DiscordBotControl API started",
-		zap.String("port", cfg.Server.Port),
-		zap.String("local_db", cfg.Storage.LocalDBPath),
-	)
-	if err := r.Run(cfg.Server.Port); err != nil {
-		logger.Fatal("Failed to start server", zap.Error(err))
+	if err := app.Run(); err != nil {
+		logger.Fatal("Application terminated with error", zap.Error(err))
 	}
 }
