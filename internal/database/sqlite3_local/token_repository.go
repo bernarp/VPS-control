@@ -21,6 +21,8 @@ const (
 	jtiFormat         = "%s_%d%s"
 )
 
+var _ TokenStore = (*TokenRepository)(nil)
+
 type TokenRepository struct {
 	db     *sql.DB
 	logger *zap.Logger

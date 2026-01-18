@@ -1,9 +1,9 @@
 package internal
 
 import (
-	"DiscordBotControl/internal/auth"
-	"DiscordBotControl/internal/middleware"
-	"DiscordBotControl/internal/vps/fail2ban"
+	"VPS-control/internal/auth"
+	"VPS-control/internal/middleware"
+	"VPS-control/internal/vps/fail2ban"
 
 	"github.com/gin-gonic/gin"
 )

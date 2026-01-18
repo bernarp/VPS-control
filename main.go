@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 
-	_ "DiscordBotControl/docs"
-	"DiscordBotControl/internal/config"
+	_ "VPS-control/docs"
+	"VPS-control/internal/config"
 
 	"github.com/joho/godotenv"
 	"go.uber.org/zap"

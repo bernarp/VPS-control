@@ -1,7 +1,7 @@
 package fail2ban
 
 import (
-	"DiscordBotControl/internal/apierror"
+	"VPS-control/internal/apierror"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -9,12 +9,12 @@ import (
 )
 
 type Handler struct {
-	controlSvc *ControlService
+	controlSvc fail2banControl
 	logger     *zap.Logger
 }
 
 func NewHandler(
-	cs *ControlService,
+	cs fail2banControl,
 	l *zap.Logger,
 ) *Handler {
 	return &Handler{

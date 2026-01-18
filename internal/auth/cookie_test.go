@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"DiscordBotControl/internal/config"
+	"VPS-control/internal/config"
 
 	"github.com/gin-gonic/gin"
 )

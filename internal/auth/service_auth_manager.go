@@ -3,17 +3,19 @@ package auth
 import (
 	"context"
 
-	"DiscordBotControl/internal/database/postgresql"
+	"VPS-control/internal/database/postgresql"
 )
 
+var _ AuthManager = (*ManagerService)(nil)
+
 type ManagerService struct {
-	userRepo *postgresql.UserRepository
-	permRepo *postgresql.PermissionRepository
+	userRepo postgresql.UserStore
+	permRepo postgresql.PermissionStore
 }
 
 func NewAuthManagerService(
-	userRepo *postgresql.UserRepository,
-	permRepo *postgresql.PermissionRepository,
+	userRepo postgresql.UserStore,
+	permRepo postgresql.PermissionStore,
 ) *ManagerService {
 	return &ManagerService{
 		userRepo: userRepo,

@@ -6,7 +6,7 @@ import (
 	"testing"
 	"time"
 
-	"DiscordBotControl/internal/config"
+	"VPS-control/internal/config"
 
 	"go.uber.org/zap"
 )

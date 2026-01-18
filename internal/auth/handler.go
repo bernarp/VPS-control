@@ -5,27 +5,27 @@ import (
 	"net/http"
 	"time"
 
-	"DiscordBotControl/internal/apierror"
-	"DiscordBotControl/internal/database/postgresql"
-	"DiscordBotControl/internal/database/sqlite3_local"
+	"VPS-control/internal/apierror"
+	"VPS-control/internal/database/postgresql"
+	"VPS-control/internal/database/sqlite3_local"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
 
 type Handler struct {
-	authManager   *ManagerService
-	jwtService    *AuthJwtService
-	cookieService *AuthCookieService
-	tokenRepo     *sqlite3_local.TokenRepository
+	authManager   AuthManager
+	jwtService    JwtProvider
+	cookieService SetAuthCookie
+	tokenRepo     sqlite3_local.TokenStore
 	logger        *zap.Logger
 }
 
 func NewHandler(
-	am *ManagerService,
-	aj *AuthJwtService,
-	ac *AuthCookieService,
-	tr *sqlite3_local.TokenRepository,
+	am AuthManager,
+	aj JwtProvider,
+	ac SetAuthCookie,
+	tr sqlite3_local.TokenStore,
 	l *zap.Logger,
 ) *Handler {
 	return &Handler{
@@ -113,7 +113,6 @@ func (h *Handler) Login(c *gin.Context) {
 // @Failure      401 {object} apierror.AppError
 // @Router       /auth/verify [post]
 func (h *Handler) Verify(c *gin.Context) {
-	// Используем локальную функцию GetClaims из context.go (пакет auth)
 	claims, ok := GetClaims(c)
 	if !ok {
 		apierror.Abort(c, apierror.Errors.TOKEN_EXPIRED)
@@ -144,9 +143,6 @@ func (h *Handler) Logout(c *gin.Context) {
 		apierror.Abort(c, apierror.Errors.TOKEN_EXPIRED)
 		return
 	}
-
-	// Передаем системные параметры (0, "SYSTEM") или текущего пользователя для логов,
-	// но для Logout обычно достаточно просто отозвать.
 	if err := h.tokenRepo.RevokeToken(claims.JTI, claims.UserID, claims.Username); err != nil {
 		h.logger.Warn("Failed to revoke token", zap.String("jti", claims.JTI), zap.Error(err))
 	}

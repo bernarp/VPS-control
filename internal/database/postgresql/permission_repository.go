@@ -14,6 +14,8 @@ var (
 	ErrRoleNotFound       = errors.New("role not found")
 )
 
+var _ PermissionStore = (*PermissionRepository)(nil)
+
 type PermissionRepository struct {
 	db     *pgxpool.Pool
 	logger *zap.Logger

@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"time"
 
-	"DiscordBotControl/internal/config"
+	"VPS-control/internal/config"
 
 	"github.com/golang-jwt/jwt/v5"
 	"go.uber.org/zap"
 )
+
+var _ JwtProvider = (*AuthJwtService)(nil)
 
 type AuthJwtService struct {
 	secretKey []byte

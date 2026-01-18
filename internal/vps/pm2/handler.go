@@ -1,7 +1,7 @@
 package pm2
 
 import (
-	"DiscordBotControl/internal/apierror"
+	"VPS-control/internal/apierror"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -9,14 +9,14 @@ import (
 )
 
 type Handler struct {
-	listSvc    *ListService
-	controlSvc *ControlService
+	listSvc    ProcessLister
+	controlSvc ProcessController
 	logger     *zap.Logger
 }
 
 func NewHandler(
-	ls *ListService,
-	cs *ControlService,
+	ls ProcessLister,
+	cs ProcessController,
 	l *zap.Logger,
 ) *Handler {
 	return &Handler{

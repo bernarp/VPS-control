@@ -1,8 +1,10 @@
 package pm2
 
 import (
-	"DiscordBotControl/internal/vps"
+	"VPS-control/internal/vps"
 )
+
+var _ ProcessLister = (*ListService)(nil)
 
 // ListService provides lightweight PM2 process information retrieval.
 // Instead of using 'pm2 jlist' which returns heavy JSON objects with full process metadata,

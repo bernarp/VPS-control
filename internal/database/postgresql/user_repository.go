@@ -15,6 +15,7 @@ var (
 	ErrUserInactive       = errors.New("user inactive")
 	ErrInvalidCredentials = errors.New("invalid credentials")
 )
+var _ UserStore = (*UserRepository)(nil)
 
 type UserRepository struct {
 	db     *pgxpool.Pool

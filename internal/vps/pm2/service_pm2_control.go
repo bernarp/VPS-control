@@ -1,17 +1,19 @@
 package pm2
 
 import (
-	"DiscordBotControl/internal/apierror"
+	"VPS-control/internal/apierror"
 	"fmt"
 	"os/exec"
 	"strconv"
 )
 
+var _ ProcessController = (*ControlService)(nil)
+
 type ControlService struct {
-	listSvc *ListService
+	listSvc ProcessLister
 }
 
-func NewControlService(listSvc *ListService) *ControlService {
+func NewControlService(listSvc ProcessLister) *ControlService {
 	return &ControlService{
 		listSvc: listSvc,
 	}

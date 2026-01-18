@@ -1,7 +1,7 @@
 package middleware
 
 import (
-	"DiscordBotControl/internal/apierror"
+	"VPS-control/internal/apierror"
 	"sync"
 	"time"
 

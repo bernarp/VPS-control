@@ -1,8 +1,8 @@
 package main
 
 import (
-	"DiscordBotControl/internal"
-	"DiscordBotControl/internal/middleware"
+	"VPS-control/internal"
+	"VPS-control/internal/middleware"
 	"time"
 
 	"github.com/gin-contrib/zap"

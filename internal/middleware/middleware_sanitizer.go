@@ -6,7 +6,7 @@ import (
 	"regexp"
 	"strings"
 
-	"DiscordBotControl/internal/apierror"
+	"VPS-control/internal/apierror"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"

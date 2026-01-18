@@ -3,18 +3,18 @@ package middleware
 import (
 	"strings"
 
-	"DiscordBotControl/internal/apierror"
-	"DiscordBotControl/internal/auth"
-	"DiscordBotControl/internal/database/sqlite3_local"
+	"VPS-control/internal/apierror"
+	"VPS-control/internal/auth"
+	"VPS-control/internal/database/sqlite3_local"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 )
 
 func AuthMiddleware(
-	jwtService *auth.AuthJwtService,
-	cookieService *auth.AuthCookieService,
-	tokenRepo *sqlite3_local.TokenRepository,
+	jwtService auth.JwtProvider,
+	cookieService auth.SetAuthCookie,
+	tokenRepo sqlite3_local.TokenStore,
 	logger *zap.Logger,
 ) gin.HandlerFunc {
 	return func(c *gin.Context) {

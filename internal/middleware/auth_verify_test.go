@@ -7,9 +7,9 @@ import (
 	"testing"
 	"time"
 
-	"DiscordBotControl/internal/auth"
-	"DiscordBotControl/internal/config"
-	"DiscordBotControl/internal/database/sqlite3_local"
+	"VPS-control/internal/auth"
+	"VPS-control/internal/config"
+	"VPS-control/internal/database/sqlite3_local"
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"

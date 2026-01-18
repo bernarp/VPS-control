@@ -3,10 +3,12 @@ package auth
 import (
 	"net/http"
 
-	"DiscordBotControl/internal/config"
+	"VPS-control/internal/config"
 
 	"github.com/gin-gonic/gin"
 )
+
+var _ SetAuthCookie = (*AuthCookieService)(nil)
 
 type AuthCookieService struct {
 	name     string

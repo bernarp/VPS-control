@@ -1,8 +1,8 @@
 package fail2ban
 
 import (
-	"DiscordBotControl/internal/apierror"
-	"DiscordBotControl/internal/vps"
+	"VPS-control/internal/apierror"
+	"VPS-control/internal/vps"
 	"fmt"
 	"os/exec"
 	"regexp"
@@ -11,6 +11,8 @@ import (
 
 	"go.uber.org/zap"
 )
+
+var _ fail2banControl = (*ControlService)(nil)
 
 type ControlService struct {
 	base   *vps.BaseVpsService
