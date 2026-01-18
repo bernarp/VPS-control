@@ -1,6 +1,12 @@
 package postgresql
 
-import "context"
+import (
+	"context"
+)
+
+type DB interface {
+	Close()
+}
 
 type PermissionStore interface {
 	GetUserPermissions(
@@ -25,12 +31,8 @@ type PermissionStore interface {
 		ctx context.Context,
 		userID int,
 	) (*UserPermissionsDTO, error)
-	GetAllPermissions(
-		ctx context.Context,
-	) ([]PermissionDTO, error)
-	GetAllRoles(
-		ctx context.Context,
-	) ([]RoleDTO, error)
+	GetAllPermissions(ctx context.Context) ([]PermissionDTO, error)
+	GetAllRoles(ctx context.Context) ([]RoleDTO, error)
 	AssignRoleToUser(
 		ctx context.Context,
 		userID int,
@@ -42,6 +44,7 @@ type PermissionStore interface {
 		roleName string,
 	) error
 }
+
 type UserStore interface {
 	Authenticate(
 		ctx context.Context,

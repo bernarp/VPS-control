@@ -7,18 +7,15 @@ import (
 	"VPS-control/internal/database/postgresql"
 	"VPS-control/internal/database/sqlite3_local"
 	"VPS-control/internal/middleware"
+	"VPS-control/internal/nats"
 	"VPS-control/internal/vps"
 	"VPS-control/internal/vps/fail2ban"
 	"VPS-control/internal/vps/pm2"
-	"context"
 	_ "embed"
-	"fmt"
-	"go.uber.org/zap"
 	"net/http"
-	"os"
-	"os/signal"
-	"syscall"
 	"time"
+
+	"go.uber.org/zap"
 )
 
 //go:embed errors_code.yaml
@@ -27,15 +24,17 @@ var errorConfigData []byte
 type application struct {
 	cfg        *config.Config
 	logger     *zap.Logger
-	db         *postgresql.Database
-	localDB    *sqlite3_local.LocalDB
-	authHdl    *auth.Handler
-	pm2Hdl     *pm2.Handler
-	f2bHdl     *fail2ban.Handler
-	authJwt    *auth.AuthJwtService
-	authCookie *auth.AuthCookieService
-	tokenRepo  *sqlite3_local.TokenRepository
-	sanitizer  *middleware.InputSanitizer
+	db         postgresql.DB
+	localDB    sqlite3_local.LocalDatabase
+	nats       nats.Connection
+	broker     nats.Broker
+	authHdl    auth.Handler
+	pm2Hdl     pm2.Handler
+	f2bHdl     fail2ban.Handler
+	authJwt    auth.JwtProvider
+	authCookie auth.SetAuthCookie
+	tokenRepo  sqlite3_local.TokenStore
+	sanitizer  middleware.Sanitizer
 }
 
 func initApp(
@@ -46,15 +45,20 @@ func initApp(
 		logger.Fatal("Failed to initialize api errors registry", zap.Error(err))
 	}
 
-	db := initDatabase(cfg.Database, logger)
-	localDB := initLocalDB(cfg, logger)
+	pgDB := initDatabase(cfg.Database, logger)
+	s3DB := initLocalDB(cfg, logger)
+	natsConn, err := nats.NewConnection(cfg.NATS, logger)
+	if err != nil {
+		logger.Fatal("Failed to connect to NATS", zap.Error(err))
+	}
 
-	userRepo := postgresql.NewUserRepository(db.Pool, logger)
-	permRepo := postgresql.NewPermissionRepository(db.Pool, logger)
-	tokenRepo := sqlite3_local.NewTokenRepository(localDB, logger)
+	userRepo := postgresql.NewUserRepository(pgDB.Pool, logger)
+	permRepo := postgresql.NewPermissionRepository(pgDB.Pool, logger)
+	tokenRepo := sqlite3_local.NewTokenRepository(s3DB, logger)
 	baseVpsSvc := vps.NewBaseVpsService()
 	sanitizer := middleware.NewInputSanitizer(logger)
 
+	broker := nats.NewNatsBroker(natsConn)
 	authJwt := auth.NewAuthJwtService(cfg, logger)
 	authCookie := auth.NewAuthCookieService(cfg)
 	authMgr := auth.NewAuthManagerService(userRepo, permRepo)
@@ -70,8 +74,10 @@ func initApp(
 	return &application{
 		cfg:        cfg,
 		logger:     logger,
-		db:         db,
-		localDB:    localDB,
+		db:         pgDB,
+		localDB:    s3DB,
+		nats:       natsConn,
+		broker:     broker,
 		authHdl:    authHdl,
 		pm2Hdl:     pm2Hdl,
 		f2bHdl:     f2bHdl,
@@ -82,59 +88,14 @@ func initApp(
 	}
 }
 
-func (app *application) Run() error {
-	router := setupRouter(app.logger)
-	app.registerRoutes(router)
-
-	srv := &http.Server{
+func (app *application) newServer(handler http.Handler) *http.Server {
+	return &http.Server{
 		Addr:         app.cfg.Server.Port,
-		Handler:      router,
+		Handler:      handler,
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 30 * time.Second,
 		IdleTimeout:  time.Minute,
 	}
-
-	serverErrors := make(chan error, 1)
-
-	go func() {
-		app.logger.Info("Server is starting", zap.String("port", app.cfg.Server.Port))
-		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
-			serverErrors <- err
-		}
-	}()
-
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
-
-	select {
-	case err := <-serverErrors:
-		return fmt.Errorf("server error: %w", err)
-
-	case sig := <-quit:
-		app.logger.Info("Shutdown signal received", zap.String("signal", sig.String()))
-
-		shutdownTimeout := 25 * time.Second
-		ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
-		defer cancel()
-
-		app.logger.Info("Starting graceful shutdown", zap.Duration("timeout", shutdownTimeout))
-
-		if err := srv.Shutdown(ctx); err != nil {
-			app.logger.Error("Graceful shutdown failed", zap.Error(err))
-			_ = srv.Close()
-		} else {
-			app.logger.Info("HTTP server stopped successfully")
-		}
-	}
-
-	app.closeResources()
-
-	if err := app.logger.Sync(); err != nil {
-		fmt.Fprintf(os.Stderr, "Logger sync error: %v\n", err)
-	}
-
-	app.logger.Info("Application terminated gracefully")
-	return nil
 }
 
 func initDatabase(
@@ -161,6 +122,10 @@ func initLocalDB(
 
 func (app *application) closeResources() {
 	app.logger.Info("Closing application resources")
+
+	if app.nats != nil {
+		app.nats.Close()
+	}
 
 	if app.localDB != nil {
 		app.localDB.Close()

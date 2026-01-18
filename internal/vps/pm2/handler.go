@@ -8,7 +8,7 @@ import (
 	"go.uber.org/zap"
 )
 
-type Handler struct {
+type handler struct {
 	listSvc    ProcessLister
 	controlSvc ProcessController
 	logger     *zap.Logger
@@ -18,8 +18,8 @@ func NewHandler(
 	ls ProcessLister,
 	cs ProcessController,
 	l *zap.Logger,
-) *Handler {
-	return &Handler{
+) Handler {
+	return &handler{
 		listSvc:    ls,
 		controlSvc: cs,
 		logger:     l,
@@ -36,7 +36,7 @@ func NewHandler(
 // @Failure      401  {object}  apierror.AppError
 // @Failure      500  {object}  apierror.AppError
 // @Router       /vps/pm2/processes/basic [get]
-func (h *Handler) GetProcessesBasic(c *gin.Context) {
+func (h *handler) GetProcessesBasic(c *gin.Context) {
 	data, err := h.listSvc.GetProcessesBasic()
 	if err != nil {
 		apierror.Abort(c, apierror.Errors.INTERNAL_ERROR.Wrap(err))
@@ -55,7 +55,7 @@ func (h *Handler) GetProcessesBasic(c *gin.Context) {
 // @Failure      401  {object}  apierror.AppError
 // @Failure      500  {object}  apierror.AppError
 // @Router       /vps/pm2/processes/cwd [get]
-func (h *Handler) GetProcessesWithCwd(c *gin.Context) {
+func (h *handler) GetProcessesWithCwd(c *gin.Context) {
 	data, err := h.listSvc.GetProcessesWithCwd()
 	if err != nil {
 		apierror.Abort(c, apierror.Errors.INTERNAL_ERROR.Wrap(err))
@@ -74,7 +74,7 @@ func (h *Handler) GetProcessesWithCwd(c *gin.Context) {
 // @Failure      401  {object}  apierror.AppError
 // @Failure      500  {object}  apierror.AppError
 // @Router       /vps/pm2/processes/full [get]
-func (h *Handler) GetProcessesFull(c *gin.Context) {
+func (h *handler) GetProcessesFull(c *gin.Context) {
 	data, err := h.listSvc.GetProcessesFull()
 	if err != nil {
 		apierror.Abort(c, apierror.Errors.INTERNAL_ERROR.Wrap(err))
@@ -95,7 +95,7 @@ func (h *Handler) GetProcessesFull(c *gin.Context) {
 // @Failure      404  {object}  apierror.AppError
 // @Failure      500  {object}  apierror.AppError
 // @Router       /vps/pm2/{name}/restart [post]
-func (h *Handler) Restart(c *gin.Context) {
+func (h *handler) Restart(c *gin.Context) {
 	target := c.Param("name")
 	if target == "" {
 		apierror.Abort(c, apierror.Errors.INVALID_REQUEST)
@@ -130,7 +130,7 @@ func (h *Handler) Restart(c *gin.Context) {
 // @Failure      404  {object}  apierror.AppError
 // @Failure      500  {object}  apierror.AppError
 // @Router       /vps/pm2/{name}/start [post]
-func (h *Handler) Start(c *gin.Context) {
+func (h *handler) Start(c *gin.Context) {
 	target := c.Param("name")
 	if target == "" {
 		apierror.Abort(c, apierror.Errors.INVALID_REQUEST)
@@ -165,7 +165,7 @@ func (h *Handler) Start(c *gin.Context) {
 // @Failure      404  {object}  apierror.AppError
 // @Failure      500  {object}  apierror.AppError
 // @Router       /vps/pm2/{name}/stop [post]
-func (h *Handler) Stop(c *gin.Context) {
+func (h *handler) Stop(c *gin.Context) {
 	target := c.Param("name")
 	if target == "" {
 		apierror.Abort(c, apierror.Errors.INVALID_REQUEST)

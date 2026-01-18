@@ -10,7 +10,7 @@ import (
 
 func RegisterFail2BanRoutes(
 	rg *gin.RouterGroup,
-	h *fail2ban.Handler,
+	h fail2ban.Handler,
 ) {
 	f2bGroup := rg.Group("/fail2ban")
 	{

@@ -1,5 +1,9 @@
 package sqlite3_local
 
+type LocalDatabase interface {
+	Close()
+}
+
 type TokenStore interface {
 	GenerateJTI(username string) string
 	SaveToken(

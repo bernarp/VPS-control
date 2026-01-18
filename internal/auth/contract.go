@@ -7,6 +7,21 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+type Handler interface {
+	Login(c *gin.Context)
+	Verify(c *gin.Context)
+	Logout(c *gin.Context)
+	GetSessions(c *gin.Context)
+	RevokeSession(c *gin.Context)
+}
+
+type JwtProvider interface {
+	GenerateToken(data TokenData) (string, error)
+	ValidateToken(tokenString string) (*CustomClaims, error)
+	GetIssuer() string
+	GetTTL() time.Duration
+}
+
 type SetAuthCookie interface {
 	SetAuthCookie(
 		c *gin.Context,
@@ -15,12 +30,7 @@ type SetAuthCookie interface {
 	GetAuthCookie(c *gin.Context) (string, error)
 	ClearAuthCookie(c *gin.Context)
 }
-type JwtProvider interface {
-	GenerateToken(data TokenData) (string, error)
-	ValidateToken(tokenString string) (*CustomClaims, error)
-	GetIssuer() string
-	GetTTL() time.Duration
-}
+
 type AuthManager interface {
 	Login(
 		ctx context.Context,

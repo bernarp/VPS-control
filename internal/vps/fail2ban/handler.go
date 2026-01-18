@@ -8,7 +8,7 @@ import (
 	"go.uber.org/zap"
 )
 
-type Handler struct {
+type handler struct {
 	controlSvc fail2banControl
 	logger     *zap.Logger
 }
@@ -16,8 +16,8 @@ type Handler struct {
 func NewHandler(
 	cs fail2banControl,
 	l *zap.Logger,
-) *Handler {
-	return &Handler{
+) Handler {
+	return &handler{
 		controlSvc: cs,
 		logger:     l,
 	}
@@ -30,7 +30,7 @@ func NewHandler(
 // @Produce      json
 // @Success      200  {object}  Fail2BanStatusDTO
 // @Router       /vps/fail2ban/status [get]
-func (h *Handler) GetStatus(c *gin.Context) {
+func (h *handler) GetStatus(c *gin.Context) {
 	data, err := h.controlSvc.GetGlobalStatus()
 	if err != nil {
 		apierror.Abort(c, apierror.Errors.INTERNAL_ERROR.Wrap(err))
@@ -47,7 +47,7 @@ func (h *Handler) GetStatus(c *gin.Context) {
 // @Produce      json
 // @Success      200  {object}  JailDetailsDTO
 // @Router       /vps/fail2ban/status/{name} [get]
-func (h *Handler) GetJailDetails(c *gin.Context) {
+func (h *handler) GetJailDetails(c *gin.Context) {
 	jailName := c.Param(ParamJailName)
 	data, err := h.controlSvc.GetJailDetails(jailName)
 	if err != nil {
@@ -65,7 +65,7 @@ func (h *Handler) GetJailDetails(c *gin.Context) {
 // @Param        request  body  BanActionRequest  true  "Unban details"
 // @Success      200      {object}  BanActionResponse
 // @Router       /vps/fail2ban/unban [post]
-func (h *Handler) Unban(c *gin.Context) {
+func (h *handler) Unban(c *gin.Context) {
 	var req BanActionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		apierror.Abort(c, apierror.Errors.INVALID_REQUEST)

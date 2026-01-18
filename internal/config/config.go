@@ -77,7 +77,8 @@ type CookieConfig struct {
 }
 
 func Load(path string) (*Config, error) {
-	data, err := os.ReadFile(path) //nolint:gosec // config path is from command line
+	// #nosec G304
+	data, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}

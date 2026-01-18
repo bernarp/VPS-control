@@ -10,7 +10,7 @@ import (
 
 func RegisterPM2Routes(
 	rg *gin.RouterGroup,
-	h *pm2.Handler,
+	h pm2.Handler,
 ) {
 	pm2Group := rg.Group("/pm2")
 	{

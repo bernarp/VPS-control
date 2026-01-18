@@ -13,7 +13,7 @@ import (
 	"go.uber.org/zap"
 )
 
-type Handler struct {
+type handler struct {
 	authManager   AuthManager
 	jwtService    JwtProvider
 	cookieService SetAuthCookie
@@ -27,8 +27,8 @@ func NewHandler(
 	ac SetAuthCookie,
 	tr sqlite3_local.TokenStore,
 	l *zap.Logger,
-) *Handler {
-	return &Handler{
+) Handler {
+	return &handler{
 		authManager:   am,
 		jwtService:    aj,
 		cookieService: ac,
@@ -49,7 +49,7 @@ func NewHandler(
 // @Failure      401 {object} apierror.AppError
 // @Failure      500 {object} apierror.AppError
 // @Router       /auth/login [post]
-func (h *Handler) Login(c *gin.Context) {
+func (h *handler) Login(c *gin.Context) {
 	var req LoginRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		apierror.Abort(c, apierror.Errors.INVALID_REQUEST)
@@ -112,7 +112,7 @@ func (h *Handler) Login(c *gin.Context) {
 // @Success      200 {object} AuthStatusResponse
 // @Failure      401 {object} apierror.AppError
 // @Router       /auth/verify [post]
-func (h *Handler) Verify(c *gin.Context) {
+func (h *handler) Verify(c *gin.Context) {
 	claims, ok := GetClaims(c)
 	if !ok {
 		apierror.Abort(c, apierror.Errors.TOKEN_EXPIRED)
@@ -137,7 +137,7 @@ func (h *Handler) Verify(c *gin.Context) {
 // @Success      200 {object} AuthStatusResponse
 // @Failure      401 {object} apierror.AppError
 // @Router       /auth/logout [post]
-func (h *Handler) Logout(c *gin.Context) {
+func (h *handler) Logout(c *gin.Context) {
 	claims, ok := GetClaims(c)
 	if !ok {
 		apierror.Abort(c, apierror.Errors.TOKEN_EXPIRED)
@@ -160,7 +160,7 @@ func (h *Handler) Logout(c *gin.Context) {
 // @Success      200  {object}  SessionListResponse
 // @Failure      500  {object}  apierror.AppError
 // @Router       /auth/sessions [get]
-func (h *Handler) GetSessions(c *gin.Context) {
+func (h *handler) GetSessions(c *gin.Context) {
 	entities, err := h.tokenRepo.GetAllTokens()
 	if err != nil {
 		apierror.Abort(c, apierror.Errors.DATABASE_ERROR.Wrap(err))
@@ -203,7 +203,7 @@ func (h *Handler) GetSessions(c *gin.Context) {
 // @Failure      404  {object}  apierror.AppError
 // @Failure      500  {object}  apierror.AppError
 // @Router       /auth/sessions/revoke [post]
-func (h *Handler) RevokeSession(c *gin.Context) {
+func (h *handler) RevokeSession(c *gin.Context) {
 	var req RevokeSessionRequest
 	if err := c.ShouldBindJSON(&req); err != nil {
 		apierror.Abort(c, apierror.Errors.INVALID_REQUEST)
