@@ -54,15 +54,29 @@ func (b *NatsBroker) Publish(
 func Subscribe[T any](
 	b Broker,
 	subject string,
-	handler func(payload EventPayload[T]),
+	handler func(payload EventPayload[T]) error,
+	logger *zap.Logger,
 ) (*nats.Subscription, error) {
 	return b.GetConn().Subscribe(
 		subject, func(msg *nats.Msg) {
 			var payload EventPayload[T]
 			if err := json.Unmarshal(msg.Data, &payload); err != nil {
+				logger.Error(
+					"unmarshal failed",
+					zap.String("subject", subject),
+					zap.Error(err),
+					zap.ByteString("raw_data", msg.Data),
+				)
 				return
 			}
-			handler(payload)
+			if err := handler(payload); err != nil {
+				logger.Error(
+					"handler failed",
+					zap.String("subject", subject),
+					zap.String("event_id", payload.ID),
+					zap.Error(err),
+				)
+			}
 		},
 	)
 }

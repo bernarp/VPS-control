@@ -3,7 +3,6 @@ package main
 import (
 	"log"
 
-	_ "VPS-control/docs"
 	"VPS-control/internal/config"
 
 	"github.com/joho/godotenv"

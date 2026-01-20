@@ -4,27 +4,35 @@ VPS management API built with Go and Gin framework.
 
 ## CI/CD Pipeline
 
-GitHub Actions workflow with 4 stages:
+GitHub Actions workflow with 5 stages:
 
-1. Lint - golangci-lint + govulncheck + swagger generation
-2. Test - Unit tests with race detector
-3. Build - Cross-compile for Linux AMD64
-4. Deploy - SCP binary to VPS + systemctl restart
+1. Setup - Generate Swagger docs and upload as artifact
+2. Lint - golangci-lint + govulncheck
+3. Test - Unit tests with race detector
+4. Build - Static binary for Linux AMD64
+5. Deploy - SCP binary to VPS + systemctl restart
 
 ### Required GitHub Secrets
 
-- HOST - VPS hostname
-- USERNAME - SSH user
-- SSH_PRIVATE_KEY - Private key for authentication
-- DEPLOY_PATH - Deployment directory (e.g. /opt/apps/vps-control)
-- SERVICE_NAME - systemd service name (e.g. vps-api.service)
+| Secret | Description | Example |
+|--------|-------------|---------|
+| HOST | VPS hostname | `192.168.1.100` |
+| USERNAME | SSH user | `deploy` |
+| SSH_PRIVATE_KEY | Private key for authentication | `-----BEGIN OPENSSH...` |
+| DEPLOY_PATH | Deployment directory | `/opt/apps/vps-control` |
+| SERVICE_NAME | systemd service name | `vps-api.service` |
 
 ### Tests and Checks
 
-- golangci-lint v2.8.0 - Static code analysis and style checks
-- govulncheck - Scans dependencies for known security vulnerabilities
-- go test -race - Runs unit tests with data race detector enabled
-- swag init - Validates and generates Swagger documentation
+- **golangci-lint v2.8.0** - Static code analysis and style checks
+- **govulncheck** - Scans dependencies for known security vulnerabilities
+- **go test -race** - Runs unit tests with data race detector enabled
+- **swag init** - Validates and generates Swagger documentation
+
+### Build Flags
+
+- `CGO_ENABLED=0` - Static binary without libc dependencies
+- `-ldflags="-s -w"` - Strip debug symbols (~30% smaller binary)
 
 ## Systemd Service Configuration
 
@@ -57,10 +65,11 @@ WantedBy=multi-user.target
 
 ### Enable and start
 
-```
+```bash
 sudo systemctl daemon-reload
 sudo systemctl enable <your-service-name>.service
 sudo systemctl start <your-service-name>.service
 sudo systemctl status <your-service-name>.service
 journalctl -u <your-service-name>.service -f
+```
 ```
