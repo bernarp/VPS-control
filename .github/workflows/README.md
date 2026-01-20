@@ -72,4 +72,3 @@ sudo systemctl start <your-service-name>.service
 sudo systemctl status <your-service-name>.service
 journalctl -u <your-service-name>.service -f
 ```
-```

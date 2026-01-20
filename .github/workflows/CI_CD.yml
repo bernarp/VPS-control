@@ -18,11 +18,22 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
           cache: true
 
+      - name: Cache Go binaries
+        uses: actions/cache@v4
+        with:
+          path: ~/go/bin
+          key: ${{ runner.os }}-go-bin-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-bin-
+
       - name: Install swag
-        run: go install github.com/swaggo/swag/cmd/swag@latest
+        run: |
+          if [ ! -f ~/go/bin/swag ]; then
+            go install github.com/swaggo/swag/cmd/swag@latest
+          fi
 
       - name: Generate docs
-        run: swag init
+        run: ~/go/bin/swag init
 
       - name: Upload generated docs
         uses: actions/upload-artifact@v4
@@ -47,14 +58,26 @@ jobs:
           name: swagger-docs
           path: docs/
 
+      - name: Cache Go binaries
+        uses: actions/cache@v4
+        with:
+          path: ~/go/bin
+          key: ${{ runner.os }}-go-bin-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-bin-
+
       - uses: golangci/golangci-lint-action@v8
         with:
           version: v2.8.0
 
-      - name: Run govulncheck
+      - name: Install govulncheck
         run: |
-          go install golang.org/x/vuln/cmd/govulncheck@latest
-          govulncheck ./...
+          if [ ! -f ~/go/bin/govulncheck ]; then
+            go install golang.org/x/vuln/cmd/govulncheck@latest
+          fi
+
+      - name: Run govulncheck
+        run: ~/go/bin/govulncheck ./...
 
   test:
     runs-on: ubuntu-latest

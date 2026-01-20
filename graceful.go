@@ -21,7 +21,7 @@ func (app *application) Run() error {
 	serverErrors := make(chan error, 1)
 
 	go func() {
-		zap.String("port", app.cfg.Server.Port)
+		app.logger.Info("Starting HTTP server", zap.String("port", app.cfg.Server.Port))
 		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			serverErrors <- err
 		}
@@ -35,7 +35,7 @@ func (app *application) Run() error {
 		return fmt.Errorf("server error: %w", err)
 
 	case sig := <-quit:
-		zap.String("signal", sig.String())
+		app.logger.Info("Received shutdown signal", zap.String("signal", sig.String()))
 		shutdownTimeout := 25 * time.Second
 		ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 		defer cancel()
