@@ -5,6 +5,7 @@ import (
 
 	"VPS-control/internal/config"
 
+	_ "VPS-control/docs"
 	"github.com/joho/godotenv"
 	"go.uber.org/zap"
 )
