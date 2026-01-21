@@ -1,9 +1,12 @@
 package vps
 
 import (
+	"context"
 	"encoding/json"
 	"runtime"
+	"strings"
 	"testing"
+	"time"
 )
 
 func TestBaseVpsService_Creation(t *testing.T) {
@@ -243,5 +246,115 @@ func TestBaseVpsService_RunScript_NestedJSON(t *testing.T) {
 
 	if result.Inner.Value != "deep" {
 		t.Errorf("Inner.Value = %q, want %q", result.Inner.Value, "deep")
+	}
+}
+
+func TestBaseVpsService_WithCustomTimeout(t *testing.T) {
+	svc := NewBaseVpsServiceWithTimeout(5 * time.Second)
+	if svc.Timeout != 5*time.Second {
+		t.Errorf("Timeout = %v, want 5s", svc.Timeout)
+	}
+}
+
+func TestBaseVpsService_DefaultTimeout(t *testing.T) {
+	svc := NewBaseVpsService()
+	if svc.Timeout != DefaultTimeout {
+		t.Errorf("Timeout = %v, want %v", svc.Timeout, DefaultTimeout)
+	}
+}
+
+func TestBaseVpsService_RunScript_Timeout(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping on Windows: sleep command differs")
+	}
+
+	svc := NewBaseVpsServiceWithTimeout(100 * time.Millisecond)
+
+	var result interface{}
+	err := svc.RunScript("sleep 10", &result)
+	if err == nil {
+		t.Error("RunScript should timeout")
+	}
+
+	if !strings.Contains(err.Error(), "timeout") {
+		t.Errorf("error should mention timeout, got: %v", err)
+	}
+}
+
+func TestBaseVpsService_ExecuteSimple_Timeout(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping on Windows: sleep command differs")
+	}
+
+	svc := NewBaseVpsServiceWithTimeout(100 * time.Millisecond)
+
+	err := svc.ExecuteSimple("sleep", "10")
+	if err == nil {
+		t.Error("ExecuteSimple should timeout")
+	}
+
+	if !strings.Contains(err.Error(), "timeout") {
+		t.Errorf("error should mention timeout, got: %v", err)
+	}
+}
+
+func TestBaseVpsService_RunScriptWithContext_Cancel(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping on Windows")
+	}
+
+	svc := NewBaseVpsService()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	var result interface{}
+	err := svc.RunScriptWithContext(ctx, "sleep 10", &result)
+	if err == nil {
+		t.Error("RunScriptWithContext should fail on cancelled context")
+	}
+
+	if !strings.Contains(err.Error(), "cancelled") {
+		t.Errorf("error should mention cancelled, got: %v", err)
+	}
+}
+
+func TestBaseVpsService_ExecuteWithContext_Cancel(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Skipping on Windows")
+	}
+
+	svc := NewBaseVpsService()
+
+	ctx, cancel := context.WithCancel(context.Background())
+	cancel()
+
+	err := svc.ExecuteWithContext(ctx, "sleep", "10")
+	if err == nil {
+		t.Error("ExecuteWithContext should fail on cancelled context")
+	}
+}
+
+func TestBaseVpsService_RunScriptWithContext_Success(t *testing.T) {
+	svc := NewBaseVpsService()
+
+	var result map[string]string
+	err := svc.RunScriptWithContext(context.Background(), `echo '{"status":"ok"}'`, &result)
+	if err != nil {
+		t.Fatalf("RunScriptWithContext failed: %v", err)
+	}
+
+	if result["status"] != "ok" {
+		t.Errorf("status = %q, want %q", result["status"], "ok")
+	}
+}
+
+func TestBaseVpsService_ZeroTimeout(t *testing.T) {
+	svc := &BaseVpsService{Timeout: 0}
+
+	var result interface{}
+	err := svc.RunScript(":", &result)
+	if err != nil {
+		t.Errorf("zero timeout should work without deadline: %v", err)
 	}
 }
