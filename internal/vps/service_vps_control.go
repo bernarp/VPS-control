@@ -10,8 +10,6 @@ import (
 	"time"
 )
 
-const DefaultTimeout = 30 * time.Second
-
 type BaseVpsService struct {
 	Timeout time.Duration
 }
@@ -50,14 +48,14 @@ func (s *BaseVpsService) RunScriptWithContext(
 	ctx, cancel := s.contextWithTimeout(ctx)
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, "bash", "-c", script)
+	cmd := exec.CommandContext(ctx, shellName, shellFlag, script)
 
 	var stdout, stderr bytes.Buffer
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 
 	if err := cmd.Run(); err != nil {
-		return s.wrapError("script execution", err, ctx.Err(), stderr.String())
+		return s.wrapError(opScriptExecution, err, ctx.Err(), stderr.String())
 	}
 
 	if stdout.Len() == 0 {
@@ -65,7 +63,7 @@ func (s *BaseVpsService) RunScriptWithContext(
 	}
 
 	if err := json.Unmarshal(stdout.Bytes(), target); err != nil {
-		return fmt.Errorf("json unmarshal: %w, response: %s", err, truncate(stdout.String(), 200))
+		return fmt.Errorf(errJsonUnmarshal, err, truncate(stdout.String(), 200))
 	}
 
 	return nil
@@ -85,7 +83,7 @@ func (s *BaseVpsService) ExecuteWithContext(
 	cmd.Stderr = &stderr
 
 	if err := cmd.Run(); err != nil {
-		return s.wrapError(fmt.Sprintf("command %s", name), err, ctx.Err(), stderr.String())
+		return s.wrapError(fmt.Sprintf(opCommand, name), err, ctx.Err(), stderr.String())
 	}
 
 	return nil
@@ -104,15 +102,15 @@ func (s *BaseVpsService) wrapError(
 	stderr string,
 ) error {
 	if errors.Is(ctxErr, context.DeadlineExceeded) {
-		return fmt.Errorf("%s: timeout after %v", operation, s.Timeout)
+		return fmt.Errorf(errTimeout, operation, s.Timeout)
 	}
 	if errors.Is(ctxErr, context.Canceled) {
-		return fmt.Errorf("%s: cancelled", operation)
+		return fmt.Errorf(errCancelled, operation)
 	}
 	if stderr != "" {
-		return fmt.Errorf("%s: %w, stderr: %s", operation, err, stderr)
+		return fmt.Errorf(errWithStderr, operation, err, stderr)
 	}
-	return fmt.Errorf("%s: %w", operation, err)
+	return fmt.Errorf(errGeneric, operation, err)
 }
 
 func truncate(
@@ -122,5 +120,5 @@ func truncate(
 	if len(s) <= maxLen {
 		return s
 	}
-	return s[:maxLen] + "..."
+	return s[:maxLen] + truncateSuffix
 }
