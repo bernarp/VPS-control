@@ -15,7 +15,7 @@ func RegisterFail2BanRoutes(
 	f2bGroup := rg.Group("/fail2ban")
 	{
 		f2bGroup.GET("/status", middleware.RequirePermission(auth.PermF2BViewStatus), h.GetStatus)
-		f2bGroup.GET("/status/:name", middleware.RequirePermission(auth.PermF2BViewJail), h.GetJailDetails)
+		f2bGroup.GET("/jail", middleware.RequirePermission(auth.PermF2BViewJail), h.GetJailDetails)
 		f2bGroup.POST("/unban", middleware.RequirePermission(auth.PermF2BControlUnban), h.Unban)
 	}
 }

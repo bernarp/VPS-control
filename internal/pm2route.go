@@ -18,8 +18,8 @@ func RegisterPM2Routes(
 		pm2Group.GET("/processes/cwd", middleware.RequirePermission(auth.PermPM2ViewCwd), h.GetProcessesWithCwd)
 		pm2Group.GET("/processes/full", middleware.RequirePermission(auth.PermPM2ViewFull), h.GetProcessesFull)
 
-		pm2Group.POST("/:name/restart", middleware.RequirePermission(auth.PermPM2ControlRestart), h.Restart)
-		pm2Group.POST("/:name/start", middleware.RequirePermission(auth.PermPM2ControlStart), h.Start)
-		pm2Group.POST("/:name/stop", middleware.RequirePermission(auth.PermPM2ControlStop), h.Stop)
+		pm2Group.POST("/restart", middleware.RequirePermission(auth.PermPM2ControlRestart), h.Restart)
+		pm2Group.POST("/start", middleware.RequirePermission(auth.PermPM2ControlStart), h.Start)
+		pm2Group.POST("/stop", middleware.RequirePermission(auth.PermPM2ControlStop), h.Stop)
 	}
 }

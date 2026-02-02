@@ -153,22 +153,29 @@ func (h *handler) Logout(c *gin.Context) {
 
 // GetSessions godoc
 // @Summary      Get all auth sessions
-// @Description  Returns a list of all generated tokens (active and revoked) from local SQLite DB
+// @Description  Returns a list of all generated tokens. Supports filtering by username via query.
 // @Tags         auth
 // @Security     CookieAuth
+// @Param        username query string false "Filter by username"
 // @Produce      json
 // @Success      200  {object}  SessionListResponse
 // @Failure      500  {object}  apierror.AppError
 // @Router       /auth/sessions [get]
 func (h *handler) GetSessions(c *gin.Context) {
+	filterUser := c.Query("username")
+
 	entities, err := h.tokenRepo.GetAllTokens()
 	if err != nil {
 		apierror.Abort(c, apierror.Errors.DATABASE_ERROR.Wrap(err))
 		return
 	}
 
-	sessions := make([]SessionResponse, 0, len(entities))
+	sessions := make([]SessionResponse, 0)
 	for _, e := range entities {
+		if filterUser != "" && e.Username != filterUser {
+			continue
+		}
+
 		resp := SessionResponse{
 			ID:        e.ID,
 			JTI:       e.JTI,

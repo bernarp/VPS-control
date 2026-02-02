@@ -6,12 +6,13 @@ import (
 	"VPS-control/internal/config"
 
 	_ "VPS-control/docs"
+
 	"github.com/joho/godotenv"
 	"go.uber.org/zap"
 )
 
 // @title           VPS_API
-// @version         2.7
+// @version         3.0
 // @description     VPS management system.
 // @BasePath        /api
 // @schemes         https

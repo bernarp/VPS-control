@@ -27,78 +27,104 @@ func NewHandler(
 }
 
 // GetProcessesBasic godoc
-// @Summary      Get basic PM2 processes grouped by PPID
-// @Description  Returns processes grouped by parent PID with name, PID and active status
+// @Summary      Get basic PM2 processes
+// @Description  Returns processes grouped by PPID. Optional filter by ppid.
 // @Tags         pm2
 // @Security     CookieAuth
+// @Param        ppid query string false "Filter by Parent PID"
 // @Produce      json
 // @Success      200  {object}  ProcessBasicGrouped
-// @Failure      401  {object}  apierror.AppError
-// @Failure      500  {object}  apierror.AppError
 // @Router       /vps/pm2/processes/basic [get]
 func (h *handler) GetProcessesBasic(c *gin.Context) {
+	ppid := c.Query("ppid")
 	data, err := h.listSvc.GetProcessesBasic()
 	if err != nil {
 		apierror.Abort(c, apierror.Errors.INTERNAL_ERROR.Wrap(err))
 		return
 	}
+
+	if ppid != "" {
+		if val, ok := data[ppid]; ok {
+			c.JSON(http.StatusOK, ProcessBasicGrouped{ppid: val})
+			return
+		}
+		c.JSON(http.StatusOK, ProcessBasicGrouped{})
+		return
+	}
+
 	c.JSON(http.StatusOK, data)
 }
 
 // GetProcessesWithCwd godoc
-// @Summary      Get PM2 processes with cwd grouped by PPID
-// @Description  Returns processes grouped by parent PID with name, PID, working directory and active status
+// @Summary      Get PM2 processes with cwd
+// @Description  Returns processes with working directory. Optional filter by ppid.
 // @Tags         pm2
 // @Security     CookieAuth
+// @Param        ppid query string false "Filter by Parent PID"
 // @Produce      json
 // @Success      200  {object}  ProcessWithCwdGrouped
-// @Failure      401  {object}  apierror.AppError
-// @Failure      500  {object}  apierror.AppError
 // @Router       /vps/pm2/processes/cwd [get]
 func (h *handler) GetProcessesWithCwd(c *gin.Context) {
+	ppid := c.Query("ppid")
 	data, err := h.listSvc.GetProcessesWithCwd()
 	if err != nil {
 		apierror.Abort(c, apierror.Errors.INTERNAL_ERROR.Wrap(err))
 		return
 	}
+
+	if ppid != "" {
+		if val, ok := data[ppid]; ok {
+			c.JSON(http.StatusOK, ProcessWithCwdGrouped{ppid: val})
+			return
+		}
+		c.JSON(http.StatusOK, ProcessWithCwdGrouped{})
+		return
+	}
+
 	c.JSON(http.StatusOK, data)
 }
 
 // GetProcessesFull godoc
-// @Summary      Get full PM2 processes grouped by PPID
-// @Description  Returns processes grouped by parent PID with full metrics (CPU, Memory, started_at, active)
+// @Summary      Get full PM2 processes
+// @Description  Returns processes with metrics. Optional filter by ppid.
 // @Tags         pm2
 // @Security     CookieAuth
+// @Param        ppid query string false "Filter by Parent PID"
 // @Produce      json
 // @Success      200  {object}  ProcessFullGrouped
-// @Failure      401  {object}  apierror.AppError
-// @Failure      500  {object}  apierror.AppError
 // @Router       /vps/pm2/processes/full [get]
 func (h *handler) GetProcessesFull(c *gin.Context) {
+	ppid := c.Query("ppid")
 	data, err := h.listSvc.GetProcessesFull()
 	if err != nil {
 		apierror.Abort(c, apierror.Errors.INTERNAL_ERROR.Wrap(err))
 		return
 	}
+
+	if ppid != "" {
+		if val, ok := data[ppid]; ok {
+			c.JSON(http.StatusOK, ProcessFullGrouped{ppid: val})
+			return
+		}
+		c.JSON(http.StatusOK, ProcessFullGrouped{})
+		return
+	}
+
 	c.JSON(http.StatusOK, data)
 }
 
 // Restart godoc
 // @Summary      Restart PM2 process
-// @Description  Restarts a PM2 process by name or PID
 // @Tags         pm2
 // @Security     CookieAuth
-// @Param        name  path  string  true  "Process Name or PID"
+// @Param        name  query  string  true  "Process Name or PID"
 // @Produce      json
 // @Success      200  {object}  ProcessActionResponse
-// @Failure      401  {object}  apierror.AppError
-// @Failure      404  {object}  apierror.AppError
-// @Failure      500  {object}  apierror.AppError
-// @Router       /vps/pm2/{name}/restart [post]
+// @Router       /vps/pm2/restart [post]
 func (h *handler) Restart(c *gin.Context) {
-	target := c.Param("name")
+	target := c.Query("name")
 	if target == "" {
-		apierror.Abort(c, apierror.Errors.INVALID_REQUEST)
+		apierror.Abort(c, apierror.Errors.INVALID_REQUEST.WithMeta("query parameter 'name' is required"))
 		return
 	}
 
@@ -120,20 +146,16 @@ func (h *handler) Restart(c *gin.Context) {
 
 // Start godoc
 // @Summary      Start PM2 process
-// @Description  Starts a PM2 process by name or PID
 // @Tags         pm2
 // @Security     CookieAuth
-// @Param        name  path  string  true  "Process Name or PID"
+// @Param        name  query  string  true  "Process Name or PID"
 // @Produce      json
 // @Success      200  {object}  ProcessActionResponse
-// @Failure      401  {object}  apierror.AppError
-// @Failure      404  {object}  apierror.AppError
-// @Failure      500  {object}  apierror.AppError
-// @Router       /vps/pm2/{name}/start [post]
+// @Router       /vps/pm2/start [post]
 func (h *handler) Start(c *gin.Context) {
-	target := c.Param("name")
+	target := c.Query("name")
 	if target == "" {
-		apierror.Abort(c, apierror.Errors.INVALID_REQUEST)
+		apierror.Abort(c, apierror.Errors.INVALID_REQUEST.WithMeta("query parameter 'name' is required"))
 		return
 	}
 
@@ -155,20 +177,16 @@ func (h *handler) Start(c *gin.Context) {
 
 // Stop godoc
 // @Summary      Stop PM2 process
-// @Description  Stops a PM2 process by name or PID
 // @Tags         pm2
 // @Security     CookieAuth
-// @Param        name  path  string  true  "Process Name or PID"
+// @Param        name  query  string  true  "Process Name or PID"
 // @Produce      json
 // @Success      200  {object}  ProcessActionResponse
-// @Failure      401  {object}  apierror.AppError
-// @Failure      404  {object}  apierror.AppError
-// @Failure      500  {object}  apierror.AppError
-// @Router       /vps/pm2/{name}/stop [post]
+// @Router       /vps/pm2/stop [post]
 func (h *handler) Stop(c *gin.Context) {
-	target := c.Param("name")
+	target := c.Query("name")
 	if target == "" {
-		apierror.Abort(c, apierror.Errors.INVALID_REQUEST)
+		apierror.Abort(c, apierror.Errors.INVALID_REQUEST.WithMeta("query parameter 'name' is required"))
 		return
 	}
 
